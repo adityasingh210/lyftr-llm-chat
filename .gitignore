@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+dist/
+data/
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+*.tsbuildinfo
+.coverage
+htmlcov/
+e2e-shots/

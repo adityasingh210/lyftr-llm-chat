@@ -1,0 +1,30 @@
+name: lyftr-chat
+
+services:
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/app.db}
+      CACHE_DIR: ${CACHE_DIR:-/data/llm_cache}
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      # Read by the browser, so it must be the backend URL as seen from the host.
+      API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app-data:

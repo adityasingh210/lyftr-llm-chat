@@ -1,0 +1,4 @@
+# Keep LF endings so shell scripts, Dockerfiles and the Makefile work inside Linux containers
+# even when the repo is checked out on Windows with core.autocrlf=true.
+* text=auto eol=lf
+*.png binary
