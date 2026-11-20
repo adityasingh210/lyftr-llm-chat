@@ -28,10 +28,9 @@ browser ──► React (Vite, nginx) ──► FastAPI ──► LLMGateway ─
 
 | | URL |
 |---|---|
-| Frontend | `https://<your-frontend>.vercel.app` |
-| Backend | `https://<your-backend>.onrender.com` |
-| Health | `https://<your-backend>.onrender.com/health` |
-| Repository | `https://github.com/<you>/<repo>` |
+| Frontend | `https://lyftr-llm-chat.vercel.app` |
+| Backend | `https://lyftr-llm-chat.onrender.com` |
+| Health | `https://lyftr-llm-chat.onrender.com/health` |
 | Demo video | `<link>` |
 
 > The deployed backend runs with `ENABLE_FAILURE_SIMULATION=true` so failover can be tested on demand.
