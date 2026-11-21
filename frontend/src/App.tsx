@@ -81,6 +81,10 @@ export default function App() {
   const [pending, setPending] = useState(false);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [healthState, setHealthState] = useState<HealthState>("connecting");
+  // Only disable when the backend has told us simulation is off; if health is unknown, the header
+  // is harmless (the server ignores it unless ENABLE_FAILURE_SIMULATION=true).
+  const simulationDisabled = health !== null && health.failure_simulation_enabled === false;
+  const activeSimulation = simulationDisabled ? "" : simulate;
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -144,7 +148,7 @@ export default function App() {
             message,
             ...(systemPrompt.trim() ? { system_prompt: systemPrompt.trim() } : {}),
           },
-          simulate || undefined,
+          activeSimulation || undefined,
         );
         setEntries((prev) => [
           ...prev,
@@ -162,7 +166,7 @@ export default function App() {
         inputRef.current?.focus();
       }
     },
-    [pending, sessionId, simulate, systemPrompt],
+    [pending, sessionId, activeSimulation, systemPrompt],
   );
 
   const retry = (entry: Extract<Entry, { role: "error" }>) => {
@@ -242,20 +246,28 @@ export default function App() {
               rows={2}
             />
           </label>
-          {health?.failure_simulation_enabled && (
-            <label className="field">
-              <span>
-                Failover test hook <code>X-Simulate-Failure</code>
-              </span>
-              <select data-testid="simulate-failure" value={simulate} onChange={(e) => setSimulate(e.target.value)}>
-                {SIMULATION_PRESETS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          <label className="field">
+            <span>
+              Failover test hook <code>X-Simulate-Failure</code>
+            </span>
+            <select
+              data-testid="simulate-failure"
+              value={simulate}
+              onChange={(e) => setSimulate(e.target.value)}
+              disabled={simulationDisabled}
+            >
+              {SIMULATION_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            {simulationDisabled && (
+              <small className="field-note" data-testid="simulation-disabled-note">
+                Disabled on this backend. Set <code>ENABLE_FAILURE_SIMULATION=true</code> on the server and redeploy.
+              </small>
+            )}
+          </label>
           <p className="session-id">
             session <code data-testid="session-id">{sessionId}</code>
           </p>
@@ -333,9 +345,9 @@ export default function App() {
       </main>
 
       <form className="composer" onSubmit={onSubmit}>
-        {simulate && (
+        {activeSimulation && (
           <div className="sim-banner">
-            Next message will send <code>X-Simulate-Failure: {simulate}</code>
+            Next message will send <code>X-Simulate-Failure: {activeSimulation}</code>
           </div>
         )}
         <div className="composer-box">

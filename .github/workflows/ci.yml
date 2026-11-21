@@ -34,6 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Ubuntu 24.04's system Python refuses `pip install` (PEP 668), so use a managed one.
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
       - name: Create .env for the mock model
         run: |
           cp .env.example .env
@@ -47,10 +50,10 @@ jobs:
       - name: Image sizes
         run: docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep lyftr
       - name: API contract
-        run: python3 scripts/verify_api.py http://localhost:8000
+        run: python scripts/verify_api.py http://localhost:8000
       - name: UI end-to-end (Playwright)
         run: |
-          pip install playwright==1.52.0
+          python -m pip install playwright==1.52.0
           python -m playwright install --with-deps chromium
           python scripts/e2e_ui.py http://localhost:3000 --screenshots e2e-shots
       - name: History survives a restart (named volume)

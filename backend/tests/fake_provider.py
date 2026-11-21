@@ -131,7 +131,13 @@ class FakeProvider:
                     }
                 self._send(200, json.dumps(body).encode())
 
-        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        class QuietServer(ThreadingHTTPServer):
+            def handle_error(self, request: Any, client_address: Any) -> None:
+                # The "slow" key's client times out on purpose; writing to the closed socket
+                # afterwards raises BrokenPipeError, which is expected and not worth a traceback.
+                pass
+
+        self.server = QuietServer(("127.0.0.1", 0), Handler)
         self.server.daemon_threads = True
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)

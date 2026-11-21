@@ -203,3 +203,19 @@ test("a new chat starts a new session id", async () => {
     .map(([, init]) => JSON.parse(String(init!.body)).session_id);
   expect(ids[0]).not.toBe(ids[1]);
 });
+
+test("failover control is visible but disabled when the backend has simulation off", async () => {
+  const fetchMock = mockFetch((url) =>
+    url.endsWith("/health")
+      ? { status: 200, body: { ...health, failure_simulation_enabled: false } }
+      : { status: 200, body: okReply() },
+  );
+  render(<App />);
+  await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+  await waitFor(() => expect(screen.getByTestId("simulate-failure")).toBeDisabled());
+  expect(screen.getByTestId("simulation-disabled-note")).toHaveTextContent("ENABLE_FAILURE_SIMULATION=true");
+  await userEvent.type(screen.getByTestId("chat-input"), "hi{Enter}");
+  await screen.findByTestId("assistant-message");
+  const [, init] = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/chat"))!;
+  expect((init!.headers as Record<string, string>)["X-Simulate-Failure"]).toBeUndefined();
+});
